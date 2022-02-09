@@ -1,0 +1,17 @@
+connect prevent_purge,localhost,root,,;
+start transaction with consistent snapshot;
+connection default;
+CREATE TABLE t1 (col_text TEXT NOT NULL, KEY (col_text(9))) ENGINE=InnoDB;
+INSERT INTO t1 (col_text) VALUES (REPEAT('x', 8193.0000));
+UPDATE t1 SET col_text='';
+UPDATE t1 SET col_text=REPEAT('y', 8193.0000);
+connect con1,localhost,root,,;
+BEGIN;
+INSERT INTO t1 (col_text) VALUES (REPEAT('z', 8193.0000));
+connection default;
+CHECK TABLE t1;
+Table	Op	Msg_type	Msg_text
+test.t1	check	status	OK
+disconnect con1;
+disconnect prevent_purge;
+DROP TABLE t1;
